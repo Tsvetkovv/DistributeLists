@@ -1,30 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Entities;
+using InterfacesLibrary;
 
 namespace DataAccessLayer
 {
-    public class FileIO
+    public class File: IDataAsccessLayer
     {
         private static readonly string FolderPath = string.Format(AppDomain.CurrentDomain.BaseDirectory);
         private static readonly string UsersFileName = string.Format(FolderPath + "users.dat");
         private static readonly string DistributeListsFileName = string.Format(FolderPath + "distribute_List.dat");
 
-        public FileIO()
+        private readonly List<User> _users;
+        private readonly List<DistributeList> _distributeLists;
+
+        public File()
         {
-            if (!File.Exists(DistributeListsFileName))
-                File.Create(DistributeListsFileName);
-            if (!File.Exists(UsersFileName))
-                File.Create(UsersFileName);
+            if (!System.IO.File.Exists(DistributeListsFileName))
+                System.IO.File.Create(DistributeListsFileName);
+            if (!System.IO.File.Exists(UsersFileName))
+                System.IO.File.Create(UsersFileName);
+
+            _users = GetUsers();
+            _distributeLists = GetDistributeLists();
+        }
+
+        public void AddUser(User addingUser)
+        {
+            _users.Add(addingUser);
+        }
+
+        public void AddUserToDistributeList(User addingUser, DistributeList distributeList)
+        {
+            distributeList.SubscribersList.Add(addingUser);
         }
 
         /// <summary>
         ///  Get users list from file
         /// </summary>
-        internal List<User> GetUsers()
+        public List<User> GetUsers()
         {
             var userList = new List<User>();
 
@@ -58,7 +75,7 @@ namespace DataAccessLayer
             return userList;
         }
 
-        internal List<DistributeList> GetDistributeLists()
+        public List<DistributeList> GetDistributeLists()
         {
             //it need for send user-instance using only user's login
             var userList = GetUsers();
@@ -84,17 +101,17 @@ namespace DataAccessLayer
                     foreach (var login in logins)
                     {
                         if (login != "")
-                        distributeLists.Last().SubscribersList.Add(userList.Find(user => user.Login.Equals(login)));
+                            distributeLists.Last().SubscribersList.Add(userList.Find(user => user.Login.Equals(login)));
                     }
 
                 }
 
             }
 
-            return distributeLists;
+            return new List<DistributeList>(distributeLists); ;
         }
 
-        internal void SaveDistributeLists(List<DistributeList> savingDistributeLists)
+        public void SaveDistributeLists(List<DistributeList> savingDistributeLists)
         {
             using (var file = new StreamWriter(DistributeListsFileName, false, Encoding.UTF8))
             {
@@ -113,7 +130,7 @@ namespace DataAccessLayer
 
         }
 
-        internal void SaveUserList(List<User> savingUsers)
+        public void SaveUserList(List<User> savingUsers)
         {
             using (var file = new StreamWriter(UsersFileName, false, Encoding.UTF8))
             {
@@ -125,10 +142,10 @@ namespace DataAccessLayer
             }
         }
 
-        internal void SaveAll(List<User> savingUsers, List<DistributeList> savingDistributeLists)
+        public void SaveAllFromCache()
         {
-            SaveUserList(savingUsers);
-            SaveDistributeLists(savingDistributeLists);
+            SaveUserList(_users);
+            SaveDistributeLists(_distributeLists);
         }
     }
 }

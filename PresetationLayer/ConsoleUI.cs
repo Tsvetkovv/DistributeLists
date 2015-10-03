@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Entities;
+using System.Linq;
 using BusinessLogicLayer;
 
 namespace PresetationLayer
@@ -27,22 +28,15 @@ namespace PresetationLayer
                                   "5. Изменить название рассылки\n" +
                                   "6. Удалить список рассылки\n" +
                                   "7. Вывести списки рассылки, на которые подписан пользователь\n" +
-                                  "8. Получить рассылки, которые подлежат удалению\n\n" +
+                                  "8. Получить рассылки, которые подлежат удалению\n" +
+                                  "9. Добавить пользователя в список\n\n" +
                                   "0. Сохранить и выйти\n");
-                int answer = -1;
-                if (!int.TryParse(Console.ReadLine(), out answer) || answer < 0 || answer > 8)
-                {
-                    Console.WriteLine("Некорректный ввод\nНажмите <Enter> для возврата в главное меню\n" + StringSeparator);
-                    Console.ReadLine();
-                    Console.Clear();
-                    continue;
-                }
-
+                string answer = "";
                 #region switch
 
                 switch (answer)
                 {
-                    case 1:
+                    case "1":
                     {
                         PrintDistributeLists(core.GetDistributeLists());
                         Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
@@ -50,7 +44,7 @@ namespace PresetationLayer
                         Console.Clear();
                         break;
                     }
-                    case 2:
+                    case "2":
                     {
                         PrintUsers(core.GetUsers());
                         Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
@@ -58,7 +52,7 @@ namespace PresetationLayer
                         Console.Clear();
                         break;
                     }
-                    case 3:
+                    case "3":
                     {
                         //Method contains its console menu
                         core.AddUser(CreatingUser());
@@ -67,7 +61,7 @@ namespace PresetationLayer
                         Console.Clear();
                         break;
                     }
-                    case 4:
+                    case "4":
                     {
                         core.GetDistributeLists().Add(CreatingDistributeList());
                         Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
@@ -75,27 +69,32 @@ namespace PresetationLayer
                         Console.Clear();
                         break;
                     }
-                    case 5:
+                    case "5":
                     {
                         ChangeTitleOfDistributeList();
                         break;
                     }
-                    case 6:
+                    case "6":
                     {
                         DeleteOfDistributeList();
                         break;
                     }
-                    case 7:
+                    case "7":
                     {
                         PrintSubscriptionOfUser();
                         break;
                     }
-                    case 8:
+                    case "8":
                     {
                         PrintCandidatesForDeletion();
                         break;
                     }
-                    case 0:
+                    case "9":
+                    {
+                        AddUserToList();
+                        break;
+                    }
+                    case "0":
                     {
                         Console.WriteLine("Вы уверены, что хотите сохранить изменения и выйти? (y/n)\n");
 
@@ -107,6 +106,13 @@ namespace PresetationLayer
                         core.SaveChanges();
                         return;
                     }
+                    default:
+                    {
+                            Console.WriteLine("Некорректный ввод\nНажмите <Enter> для возврата в главное меню\n" + StringSeparator);
+                            Console.ReadLine();
+                            Console.Clear();
+                            continue;
+                        }
                 }
 
                 #endregion
@@ -310,6 +316,41 @@ namespace PresetationLayer
             {
                 Console.WriteLine("\t{0}. {1}", i + 1, candidates[i].Title);
             }
+
+            Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
+            Console.ReadLine();
+            Console.Clear();
+        }
+
+        private static void AddUserToList()
+        {
+            var users = core.GetUsers();
+            var lists = core.GetDistributeLists();
+            int answer;
+
+            Console.WriteLine("Выберите пользователя для добавления в список рассылки\n");
+            PrintUsers(users);
+
+            while (!int.TryParse(Console.ReadLine(), out answer) || answer < 1 || answer > users.Count)
+            {
+                Console.WriteLine("Некорректный ввод. Попробуйте ещё раз\n");
+            }
+            var selectedUser = users[answer - 1];
+
+            Console.WriteLine("Выберите рассылку, в которую необходимо добавить пользователя\n");
+            var selectedLists = from list in lists
+                               where list.SubscribersList.TrueForAll(user => user.Login != selectedUser.Login)
+                                select list;
+            PrintDistributeLists((List<DistributeList>)selectedLists.ToList<DistributeList>());
+
+            while (!int.TryParse(Console.ReadLine(), out answer) || answer < 1 || answer > lists.Count)
+            {
+                Console.WriteLine("Некорректный ввод. Попробуйте ещё раз\n");
+            }
+            var selectedList = selectedLists.ToList<DistributeList>()[answer - 1];
+
+            core.AddUserToDistributeList(selectedUser, selectedList);
+            Console.WriteLine("Пользователь добавлен");
 
             Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
             Console.ReadLine();

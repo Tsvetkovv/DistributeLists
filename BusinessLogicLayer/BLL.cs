@@ -2,36 +2,37 @@
 using System.Linq;
 using Entities;
 using DataAccessLayer;
+using InterfacesLibrary;
 
 namespace BusinessLogicLayer
 {
     public class BLL
     {
-        readonly Cache _data = new Cache();
+        readonly IDataAsccessLayer _data = new File();
 
         public void AddUser(User addingUser)
         {
-            _data.Users.Add(addingUser);
+            _data.AddUser(addingUser);
         }
 
         public void AddUserToDistributeList(User addingUser, DistributeList distributeList)
         {
-            distributeList.SubscribersList.Add(addingUser);
+            _data.AddUserToDistributeList(addingUser, distributeList);
         }
 
         public List<DistributeList> GetDistributeLists()
         {
-            return _data.DistributeLists;
+            return _data.GetDistributeLists();
         }
 
         public List<User> GetUsers()
         {
-            return _data.Users;
+            return _data.GetUsers();
         }
 
         public List<DistributeList> GetDistributeListsOfUser(User user)
         {
-            var distributeListsOfUser = new List<DistributeList>(_data.DistributeLists.Where(list => list.SubscribersList.Exists(user1 => user1.Login == user.Login)));
+            var distributeListsOfUser = new List<DistributeList>(_data.GetDistributeLists().Where(list => list.SubscribersList.Exists(user1 => user1.Login == user.Login)));
 
             return distributeListsOfUser;
         }
@@ -41,13 +42,13 @@ namespace BusinessLogicLayer
         /// </summary>
         public List<DistributeList> GetCandidatesForDeletion()
         {
-            return new List<DistributeList>(_data.DistributeLists.Where(list => list.SubscribersList.Count == 1));
+            return new List<DistributeList>(_data.GetDistributeLists().Where(list => list.SubscribersList.Count == 1));
         }
 
 
         public void SaveChanges()
         {
-            _data.Dispose();
+            _data.SaveAllFromCache();
         }
     }
 }
