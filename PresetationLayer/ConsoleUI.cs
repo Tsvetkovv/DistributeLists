@@ -30,84 +30,85 @@ namespace PresetationLayer
                                   "7. Вывести списки рассылки, на которые подписан пользователь\n" +
                                   "8. Получить рассылки, которые подлежат удалению\n" +
                                   "9. Добавить пользователя в список\n\n" +
-                                  "0. Сохранить и выйти\n");
-                string answer = "";
+                                  "0. Выйти\n");
+                string answer = Console.ReadLine();
                 #region switch
 
                 switch (answer)
                 {
                     case "1":
-                    {
-                        PrintDistributeLists(core.GetDistributeLists());
-                        Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
-                        Console.ReadLine();
-                        Console.Clear();
-                        break;
-                    }
-                    case "2":
-                    {
-                        PrintUsers(core.GetUsers());
-                        Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
-                        Console.ReadLine();
-                        Console.Clear();
-                        break;
-                    }
-                    case "3":
-                    {
-                        //Method contains its console menu
-                        core.AddUser(CreatingUser());
-                        Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
-                        Console.ReadLine();
-                        Console.Clear();
-                        break;
-                    }
-                    case "4":
-                    {
-                        core.GetDistributeLists().Add(CreatingDistributeList());
-                        Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
-                        Console.ReadLine();
-                        Console.Clear();
-                        break;
-                    }
-                    case "5":
-                    {
-                        ChangeTitleOfDistributeList();
-                        break;
-                    }
-                    case "6":
-                    {
-                        DeleteOfDistributeList();
-                        break;
-                    }
-                    case "7":
-                    {
-                        PrintSubscriptionOfUser();
-                        break;
-                    }
-                    case "8":
-                    {
-                        PrintCandidatesForDeletion();
-                        break;
-                    }
-                    case "9":
-                    {
-                        AddUserToList();
-                        break;
-                    }
-                    case "0":
-                    {
-                        Console.WriteLine("Вы уверены, что хотите сохранить изменения и выйти? (y/n)\n");
-
-                        if (!Console.ReadLine().Equals("y"))
                         {
+                            PrintDistributeLists(core.GetDistributeLists());
+                            Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
+                            Console.ReadLine();
                             Console.Clear();
-                            continue;
+                            break;
                         }
-                        core.SaveChanges();
-                        return;
-                    }
+                    case "2":
+                        {
+                            PrintUsers(core.GetUsers());
+                            Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
+                            Console.ReadLine();
+                            Console.Clear();
+                            break;
+                        }
+                    case "3":
+                        {
+                            //Method contains its console menu
+                            core.AddUser(CreatingUser());
+                            Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
+                            Console.ReadLine();
+                            Console.Clear();
+                            break;
+                        }
+                    case "4":
+                        {
+                            core.GetDistributeLists().Add(CreatingDistributeList());
+                            Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
+                            Console.ReadLine();
+                            Console.Clear();
+                            break;
+                        }
+                    case "5":
+                        {
+                            ChangeTitleOfDistributeList();
+                            break;
+                        }
+                    case "6":
+                        {
+                            DeleteOfDistributeList();
+                            break;
+                        }
+                    case "7":
+                        {
+                            PrintSubscriptionOfUser();
+                            break;
+                        }
+                    case "8":
+                        {
+                            PrintCandidatesForDeletion();
+                            break;
+                        }
+                    case "9":
+                        {
+                            AddUserToList();
+                            break;
+                        }
+                    case "0":
+                        {
+                            Console.WriteLine("Сохранить изменения? (y/n)\n");
+
+                            string userAnswer = Console.ReadLine();
+
+                            switch (userAnswer)
+                            {
+                                case "y": core.SaveChanges(); return;
+                                case "n": return;
+                                default: Console.Clear(); continue;
+                            }
+                        }
                     default:
-                    {
+                        {
                             Console.WriteLine("Некорректный ввод\nНажмите <Enter> для возврата в главное меню\n" + StringSeparator);
                             Console.ReadLine();
                             Console.Clear();
@@ -123,9 +124,16 @@ namespace PresetationLayer
 
         private static void PrintDistributeLists(List<DistributeList> distributeLists)
         {
-            for (int i = 0; i < distributeLists.Count; i++)
+            if (distributeLists.Count == 0)
             {
-                Console.WriteLine("\t{0}. Название: {1}\n\tОписание: {2}\n", i + 1, distributeLists[i].Title, distributeLists[i].Description);
+                Console.WriteLine("Список пуст!");
+            }
+            else
+            {
+                for (int i = 0; i < distributeLists.Count; i++)
+                {
+                    Console.WriteLine("\t{0}. Название: {1}\n\tОписание: {2}\n", i + 1, distributeLists[i].Title, distributeLists[i].Description);
+                }
             }
         }
 
@@ -338,19 +346,22 @@ namespace PresetationLayer
             var selectedUser = users[answer - 1];
 
             Console.WriteLine("Выберите рассылку, в которую необходимо добавить пользователя\n");
-            var selectedLists = from list in lists
-                               where list.SubscribersList.TrueForAll(user => user.Login != selectedUser.Login)
-                                select list;
-            PrintDistributeLists((List<DistributeList>)selectedLists.ToList<DistributeList>());
 
-            while (!int.TryParse(Console.ReadLine(), out answer) || answer < 1 || answer > lists.Count)
+            var distributeListsWithoutUser = core.GetDistrListWithoutUsers(lists, selectedUser);
+
+            PrintDistributeLists(distributeListsWithoutUser);
+
+            if (distributeListsWithoutUser.Count != 0)
             {
-                Console.WriteLine("Некорректный ввод. Попробуйте ещё раз\n");
+                while (!int.TryParse(Console.ReadLine(), out answer) || answer < 1 || answer > lists.Count)
+                {
+                    Console.WriteLine("Некорректный ввод. Попробуйте ещё раз\n");
+                }
+                var selectedList = distributeListsWithoutUser.ToList<DistributeList>()[answer - 1];
+                core.AddUserToDistributeList(selectedUser, selectedList);
+                lists = core.GetDistributeListsOfUser(selectedUser);
+                Console.WriteLine("Пользователь добавлен");
             }
-            var selectedList = selectedLists.ToList<DistributeList>()[answer - 1];
-
-            core.AddUserToDistributeList(selectedUser, selectedList);
-            Console.WriteLine("Пользователь добавлен");
 
             Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
             Console.ReadLine();

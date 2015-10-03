@@ -37,6 +37,13 @@ namespace BusinessLogicLayer
             return distributeListsOfUser;
         }
 
+        public List<DistributeList> GetDistrListWithoutUsers(List<DistributeList> lists, User selectedUser)
+        {
+            var selectedLists =
+                lists.Where(list => list.SubscribersList.TrueForAll(user => user.Login != selectedUser.Login));
+            return selectedLists.ToList();
+        }
+
         /// <summary>
         /// Кандидатом на удаление считается список рассылки, в котором есть только одна запись пользователя
         /// </summary>
@@ -44,7 +51,6 @@ namespace BusinessLogicLayer
         {
             return new List<DistributeList>(_data.GetDistributeLists().Where(list => list.SubscribersList.Count == 1));
         }
-
 
         public void SaveChanges()
         {

@@ -24,8 +24,8 @@ namespace DataAccessLayer
             if (!System.IO.File.Exists(UsersFileName))
                 System.IO.File.Create(UsersFileName);
 
-            _users = GetUsers();
-            _distributeLists = GetDistributeLists();
+            _users = GetUsersFromFile();
+            _distributeLists = GetDistributeListsFromFile();
         }
 
         public void AddUser(User addingUser)
@@ -33,15 +33,14 @@ namespace DataAccessLayer
             _users.Add(addingUser);
         }
 
+        //TODO сделать по GUID идентификацию юзеров и списов рассылки
         public void AddUserToDistributeList(User addingUser, DistributeList distributeList)
         {
-            distributeList.SubscribersList.Add(addingUser);
+            _distributeLists.Where(list => list.Title.Equals(distributeList.Title)).First().SubscribersList.Add(addingUser);
         }
 
-        /// <summary>
-        ///  Get users list from file
-        /// </summary>
-        public List<User> GetUsers()
+
+        private List<User> GetUsersFromFile()
         {
             var userList = new List<User>();
 
@@ -75,7 +74,12 @@ namespace DataAccessLayer
             return userList;
         }
 
-        public List<DistributeList> GetDistributeLists()
+        public List<User> GetUsers()
+        {
+            return _users;
+        }
+
+        private List<DistributeList> GetDistributeListsFromFile()
         {
             //it need for send user-instance using only user's login
             var userList = GetUsers();
@@ -109,6 +113,11 @@ namespace DataAccessLayer
             }
 
             return new List<DistributeList>(distributeLists); ;
+        }
+
+        public List<DistributeList> GetDistributeLists()
+        {
+            return _distributeLists;
         }
 
         public void SaveDistributeLists(List<DistributeList> savingDistributeLists)
