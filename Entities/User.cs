@@ -9,6 +9,8 @@ namespace Entities
         private string _lastName;
         private string _middleName;
 
+        public Guid Id { get; private set; }
+
         public string Login
         {
             get { return _login; }
@@ -63,6 +65,18 @@ namespace Entities
             FirstName = firstName;
             LastName = lastName;
             MiddleName = middleName;
+            Id = new Guid();
+            Id = Guid.NewGuid();
+        }
+
+        public User(Guid id, string login, string firstName, string lastName, string middleName)
+        {
+            Login = login;
+            FirstName = firstName;
+            LastName = lastName;
+            MiddleName = middleName;
+            Id = new Guid();
+            Id = id;
         }
     }
 }

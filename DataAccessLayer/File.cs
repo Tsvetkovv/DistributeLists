@@ -8,24 +8,38 @@ using InterfacesLibrary;
 
 namespace DataAccessLayer
 {
-    public class File: IDataAsccessLayer
+    public class File : IDataAsccessLayer
     {
         private static readonly string FolderPath = string.Format(AppDomain.CurrentDomain.BaseDirectory);
         private static readonly string UsersFileName = string.Format(FolderPath + "users.dat");
         private static readonly string DistributeListsFileName = string.Format(FolderPath + "distribute_List.dat");
-
+        private static readonly FileInfo UsersFile = new FileInfo(UsersFileName);
+        private static readonly FileInfo DistribureListsFile = new FileInfo(DistributeListsFileName);
         private readonly List<User> _users;
         private readonly List<DistributeList> _distributeLists;
 
         public File()
         {
-            if (!System.IO.File.Exists(DistributeListsFileName))
-                System.IO.File.Create(DistributeListsFileName);
-            if (!System.IO.File.Exists(UsersFileName))
-                System.IO.File.Create(UsersFileName);
+            _users = new List<User>();
+            _distributeLists = new List<DistributeList>();
 
-            _users = GetUsersFromFile();
-            _distributeLists = GetDistributeListsFromFile();
+            if (UsersFile.Exists)
+            {
+                _users = GetUsersFromFile();
+            }
+            else
+            {
+                UsersFile.Create().Dispose();
+            }
+
+            if (DistribureListsFile.Exists)
+            {
+                _distributeLists = GetDistributeListsFromFile();
+            }
+            else
+            {
+                DistribureListsFile.Create().Dispose();
+            }
         }
 
         public void AddUser(User addingUser)
@@ -33,12 +47,10 @@ namespace DataAccessLayer
             _users.Add(addingUser);
         }
 
-        //TODO сделать по GUID идентификацию юзеров и списов рассылки
         public void AddUserToDistributeList(User addingUser, DistributeList distributeList)
         {
-            _distributeLists.Where(list => list.Title.Equals(distributeList.Title)).First().SubscribersList.Add(addingUser);
+            _distributeLists.First(list => list.Id.Equals(distributeList.Id)).SubscribersList.Add(addingUser);
         }
-
 
         private List<User> GetUsersFromFile()
         {
@@ -46,18 +58,19 @@ namespace DataAccessLayer
 
             // Read the file and display it line by line.
             // and parsing users' data
-            using (var file = new StreamReader(UsersFileName, Encoding.UTF8))
+            using (var file = UsersFile.OpenText())
             {
                 string currentLine;
 
-                while ((currentLine = file.ReadLine()) != null)
+                while (!string.IsNullOrWhiteSpace(currentLine = file.ReadLine()))
                 {
-                    string[] currentUserData = currentLine.Split();
+                    string[] currentUserData = currentLine.Split(';');
 
-                    string login = currentUserData[0];
-                    string firstName = currentUserData[1];
-                    string lastName = currentUserData[2];
-                    string middleName = currentUserData[3];
+                    Guid userGuid = Guid.Parse(currentUserData[0]);
+                    string login = currentUserData[1];
+                    string firstName = currentUserData[2];
+                    string lastName = currentUserData[3];
+                    string middleName = currentUserData[4];
 
                     // check unique login in userList
                     if (userList.Any(user => user.Login.Equals(login)))
@@ -66,9 +79,8 @@ namespace DataAccessLayer
                         throw new IOException("login is nonunique");
                     }
 
-                    userList.Add(new User(login, firstName, lastName, middleName));
+                    userList.Add(new User(userGuid, login, firstName, lastName, middleName));
                 }
-
             }
 
             return userList;
@@ -88,8 +100,8 @@ namespace DataAccessLayer
             // Read the file and display it line by line.
             // and parsing data
             // Fields separated using ;
-            // Logins separated using space
-            using (var file = new StreamReader(DistributeListsFileName, Encoding.UTF8))
+            //Guids separated using space
+            using (var file = DistribureListsFile.OpenText())
             {
                 string currentLine;
 
@@ -97,22 +109,20 @@ namespace DataAccessLayer
                 {
                     string[] currentSubscribingData = currentLine.Split(';');
 
-                    string title = currentSubscribingData[0];
-                    string description = currentSubscribingData[1];
-                    string[] logins = currentSubscribingData[2].Split();
+                    Guid guid = Guid.Parse(currentSubscribingData[0]);
+                    string title = currentSubscribingData[1];
+                    string description = currentSubscribingData[2];
+                    string[] ids = currentSubscribingData[3].Split();
 
-                    distributeLists.Add(new DistributeList(title, description));
-                    foreach (var login in logins)
+                    distributeLists.Add(new DistributeList(guid, title, description));
+                    foreach (var id in ids.Where(id => id != ""))
                     {
-                        if (login != "")
-                            distributeLists.Last().SubscribersList.Add(userList.Find(user => user.Login.Equals(login)));
+                        distributeLists.Last().SubscribersList.Add(userList.Find(user => user.Id.Equals(Guid.Parse(id))));
                     }
-
                 }
-
             }
 
-            return new List<DistributeList>(distributeLists); ;
+            return new List<DistributeList>(distributeLists);
         }
 
         public List<DistributeList> GetDistributeLists()
@@ -120,38 +130,41 @@ namespace DataAccessLayer
             return _distributeLists;
         }
 
-        public void SaveDistributeLists(List<DistributeList> savingDistributeLists)
+        private void SaveDistributeLists(List<DistributeList> savingDistributeLists)
         {
-            using (var file = new StreamWriter(DistributeListsFileName, false, Encoding.UTF8))
+
+            DistribureListsFile.Delete();
+            using (var file = DistribureListsFile.CreateText())
             {
                 foreach (var savingList in savingDistributeLists)
                 {
-                    StringBuilder logins = new StringBuilder();
+                    StringBuilder idsOfSubscribers = new StringBuilder();
                     foreach (var user in savingList.SubscribersList)
                     {
-                        logins.AppendFormat("{0} ", user.Login);
+                        idsOfSubscribers.AppendFormat("{0} ", user.Id);
                     }
 
-                    file.WriteLine("{0};{1};{2}", savingList.Title, savingList.Description, logins);
+                    file.WriteLine("{0};{1};{2};{3}", savingList.Id, savingList.Title, savingList.Description, idsOfSubscribers);
                 }
                 file.Flush();
             }
 
         }
 
-        public void SaveUserList(List<User> savingUsers)
+        private void SaveUserList(List<User> savingUsers)
         {
-            using (var file = new StreamWriter(UsersFileName, false, Encoding.UTF8))
+            UsersFile.Delete();
+            using (var file = UsersFile.CreateText())
             {
                 foreach (var currentUser in savingUsers)
                 {
-                    file.WriteLine("{0} {1} {2} {3}", currentUser.Login, currentUser.FirstName, currentUser.LastName, currentUser.MiddleName);
+                    file.WriteLine("{0};{1};{2};{3};{4}", currentUser.Id, currentUser.Login, currentUser.FirstName, currentUser.LastName, currentUser.MiddleName);
                 }
                 file.Flush();
             }
         }
 
-        public void SaveAllFromCache()
+        public void Save()
         {
             SaveUserList(_users);
             SaveDistributeLists(_distributeLists);

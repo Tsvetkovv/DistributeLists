@@ -9,8 +9,6 @@ namespace InterfacesLibrary
         void AddUserToDistributeList(User addingUser, DistributeList distributeList);
         List<DistributeList> GetDistributeLists();
         List<User> GetUsers();
-        void SaveDistributeLists(List<DistributeList> savingDistributeLists);
-        void SaveUserList(List<User> savingUsers);
-        void SaveAllFromCache();
+        void Save();
     }
 }

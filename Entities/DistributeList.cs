@@ -8,6 +8,8 @@ namespace Entities
         private string _title;
         private string _description;
 
+        public Guid Id { get; private set; }
+
         public string Title
         {
             get { return _title; }
@@ -40,6 +42,20 @@ namespace Entities
 
             Title = title;
             Description = description;
+
+            Id = new Guid();
+            Id = Guid.NewGuid();
+        }
+
+        public DistributeList(Guid id, string title, string description)
+        {
+            SubscribersList = new List<User>();
+
+            Title = title;
+            Description = description;
+
+            Id = new Guid();
+            Id = id;
         }
     }
 }
