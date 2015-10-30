@@ -34,7 +34,7 @@ namespace Entities
             }
         }
 
-        public List<User> SubscribersList { get; private set; }
+        public List<User> SubscribersList { get; set; }
 
         public DistributeList(string title, string description)
         {

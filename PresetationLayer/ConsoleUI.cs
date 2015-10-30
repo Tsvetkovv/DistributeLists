@@ -55,7 +55,7 @@ namespace PresetationLayer
                     case "3":
                         {
                             //Method contains its console menu
-                            core.AddUser(CreatingUser());
+                            core.Create(CreateUser());
                             Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
                             Console.ReadLine();
                             Console.Clear();
@@ -63,7 +63,7 @@ namespace PresetationLayer
                         }
                     case "4":
                         {
-                            core.GetDistributeLists().Add(CreatingDistributeList());
+                            core.Create(CreateDistributeList());
                             Console.WriteLine("Нажмите <Enter> для возврата в главное меню");
                             Console.ReadLine();
                             Console.Clear();
@@ -151,7 +151,7 @@ namespace PresetationLayer
         /// Opening dialog to users using console
         /// </summary>
         /// <returns>Created user</returns>
-        private static User CreatingUser()
+        private static User CreateUser()
         {
             Console.WriteLine("Добавление нового пользователя");
 
@@ -199,7 +199,7 @@ namespace PresetationLayer
         /// <summary>
         /// Opening dialog to users using console
         /// </summary>
-        private static DistributeList CreatingDistributeList()
+        private static DistributeList CreateDistributeList()
         {
             Console.Clear();
             Console.WriteLine("Создание рассылки");

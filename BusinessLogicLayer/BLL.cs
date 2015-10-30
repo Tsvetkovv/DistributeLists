@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Entities;
 using DataAccessLayer;
@@ -10,16 +11,26 @@ namespace BusinessLogicLayer
     {
         readonly IDataAsccessLayer _data = new File();
 
-        public void AddUser(User addingUser)
+        public void Create(User addingUser)
         {
-            _data.AddUser(addingUser);
+            _data.Create(addingUser);
+        }
+        public void Create(DistributeList addingDistributeList)
+        {
+            _data.Create(addingDistributeList);
         }
 
-        public void AddUserToDistributeList(User addingUser, DistributeList distributeList)
+        public bool AddUserToDistributeList(User addingUser, DistributeList distributeList)
         {
-            _data.AddUserToDistributeList(addingUser, distributeList);
+            distributeList.SubscribersList.Add(addingUser);
+            return _data.Update(distributeList);
         }
 
+        public bool ChangeTitle(Guid idOfList, string newTitle)
+        {
+            var newList = GetDistributeLists().FirstOrDefault(list => list.Id.Equals(idOfList));
+            return _data.Update(newList);
+        }
         public List<DistributeList> GetDistributeLists()
         {
             return _data.GetDistributeLists();
@@ -32,7 +43,7 @@ namespace BusinessLogicLayer
 
         public List<DistributeList> GetDistributeListsOfUser(User user)
         {
-            var distributeListsOfUser = new List<DistributeList>(_data.GetDistributeLists().Where(list => list.SubscribersList.Exists(user1 => user1.Login == user.Login)));
+            var distributeListsOfUser = new List<DistributeList>(_data.GetDistributeLists().Where(list => list.SubscribersList.Exists(user1 => user1.Id == user.Id)));
 
             return distributeListsOfUser;
         }
@@ -40,7 +51,7 @@ namespace BusinessLogicLayer
         public List<DistributeList> GetDistrListWithoutUsers(List<DistributeList> lists, User selectedUser)
         {
             var selectedLists =
-                lists.Where(list => list.SubscribersList.TrueForAll(user => user.Login != selectedUser.Login));
+                lists.Where(list => list.SubscribersList.TrueForAll(user => user.Id != selectedUser.Id));
             return selectedLists.ToList();
         }
 
@@ -54,7 +65,7 @@ namespace BusinessLogicLayer
 
         public void SaveChanges()
         {
-            _data.SaveAllFromCache();
+            _data.Save();
         }
     }
 }

@@ -42,14 +42,42 @@ namespace DataAccessLayer
             }
         }
 
-        public void AddUser(User addingUser)
+        public bool Create(User addingUser)
         {
             _users.Add(addingUser);
+            return true;
         }
 
-        public void AddUserToDistributeList(User addingUser, DistributeList distributeList)
+        public bool Create(DistributeList addingDistributeList)
+        {
+            _distributeLists.Add(addingDistributeList);
+            return true;
+        }
+
+        public bool Update(DistributeList updatingDistributeList)
+        {
+            var list = _distributeLists.First(list1 => list1.Id.Equals(updatingDistributeList.Id));
+            list.Description = updatingDistributeList.Description;
+            list.SubscribersList = updatingDistributeList.SubscribersList;
+            list.Title = updatingDistributeList.Title;
+            return true;
+        }
+
+        public bool DeleteDistributeList(Guid idOfList)
+        {
+            _distributeLists.RemoveAll(list => list.Id.Equals(idOfList));
+            return true;
+        }
+
+        public DistributeList GetDistributeListById(Guid id)
+        {
+            return _distributeLists.FirstOrDefault(list => list.Id.Equals(id));
+        }
+
+        public bool AddUserToDistributeList(User addingUser, DistributeList distributeList)
         {
             _distributeLists.First(list => list.Id.Equals(distributeList.Id)).SubscribersList.Add(addingUser);
+            return true;
         }
 
         private List<User> GetUsersFromFile()

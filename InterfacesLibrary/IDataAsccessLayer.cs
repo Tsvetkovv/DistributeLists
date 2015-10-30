@@ -1,12 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Entities;
 
 namespace InterfacesLibrary
 {
     public interface IDataAsccessLayer
     {
-        void AddUser(User addingUser);
-        void AddUserToDistributeList(User addingUser, DistributeList distributeList);
+        bool Create(User addingUser);
+        bool Create(DistributeList addingDistributeList);
+        bool Update(DistributeList updatingDistributeList);
+        bool DeleteDistributeList(Guid id);
+        DistributeList GetDistributeListById(Guid id);
         List<DistributeList> GetDistributeLists();
         List<User> GetUsers();
         void Save();
